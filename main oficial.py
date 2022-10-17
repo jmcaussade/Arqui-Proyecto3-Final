@@ -63,14 +63,30 @@ def CleanLine(line):
     list1 = list1.split(",")
     return list1
 
+
+def Write(result, line, linecounter, opcode, ErrorCounter):
+    if result == False:
+        print("El numero de la expresion: " + line + " en la linea " + str(linecounter) +
+        " está fuera de rango")
+        ErrorCounter.append("1")
+    else:
+        ListLine.append(line)
+        ListOp.append(opcode + result)
+        
+
 def ToBinary(number, binary, decimal, hexa):
     if binary == True:
         return number
     elif hexa == True:
         scale = 16 ## equals to hexadecimal
         num_of_bits = 8
-        result = bin(int(number, scale))[2:].zfill(num_of_bits)
-        return result
+        result1 = int(number, scale)
+        #print(result1)
+        if result1 <= 255 and result1 >= -125:
+            result = bin(int(number, scale))[2:].zfill(num_of_bits)
+            return result
+        else:
+            return False
     elif decimal == True:
         num = bin(int(number)).replace("0b","")
         i = 0
@@ -96,14 +112,15 @@ def MOV(list, file):  #MOV (RealLine) -> ins basicas
             num = linea[0]
             binary = ToBinary(num, pos2, pos1, pos3)
             if linea[1] == "A":
-                file.write(line + "\n")
-                file.write("0100111" + binary + "\n")
+                Write(binary, line, linecounter,"0100111", ErrorCounter)
+
             elif linea[1] == "B":
-                file.write(line + "\n")
-                file.write("0101000" + binary + "\n")
+                Write(binary, line, linecounter,"0101000", ErrorCounter)
+
+                
         else:
-            file.write(line + "\n")
-            file.write("010101100000000" + "\n")
+            ListOp.append("010101100000000")
+            ListLine.append(line)
 
 
     elif "(" in linea[1] :   #EJ: MOV A,(Dir)
@@ -118,18 +135,20 @@ def MOV(list, file):  #MOV (RealLine) -> ins basicas
             num = linea[1]
             binary = ToBinary(num, pos2, pos1, pos3)
             if linea[0] == "B":
-                file.write(line + "\n")
-                file.write("0100110" + binary + "\n")
+                Write(binary, line, linecounter,"0100110", ErrorCounter)
+
             elif linea[0] == "A":
-                file.write(line + "\n")
-                file.write("0100101" + binary + "\n")
+                Write(binary, line, linecounter,"0100101", ErrorCounter)
+
         else: 
             if linea[0] == "A":
-                file.write(line + "\n")
-                file.write("010100100000000" + "\n")
+                ListOp.append("010100100000000")
+                ListLine.append(line)
+
             elif linea[0] == "B":
-                file.write(line + "\n")
-                file.write("010101000000000" + "\n")
+                ListOp.append("010101000000000")
+                ListLine.append(line)
+                
                 
     else:   # para abajo instrucciones basicas
         if len(linea) > 1:
@@ -142,18 +161,18 @@ def MOV(list, file):  #MOV (RealLine) -> ins basicas
                 num = linea[1]
                 binary = ToBinary(num, pos2, pos1, pos3)
                 if linea[0] == "A":
-                    file.write(line + "\n")
-                    file.write("0000010" + binary + "\n")
+                    Write(binary, line, linecounter,"0000010", ErrorCounter)
+
                 elif linea[0] == "B":
-                    file.write(line + "\n")
-                    file.write("0000011" + binary + "\n")
+                    Write(binary, line, linecounter,"0000011", ErrorCounter)
+
             else:
                 if linea[0] == "A":
-                    file.write(line + "\n")
-                    file.write("000000000000000\n")
+                    ListOp.append("000000000000000")
+                    ListLine.append(line)
                 elif linea[0] == "B":
-                    file.write(line + "\n")
-                    file.write("000000100000000\n")
+                    ListOp.append("000000100000000")
+                    ListLine.append(line)
     
 def ADD(list, file):  
     linea = list1[1].split(",") # EJ A,B 
@@ -170,14 +189,15 @@ def ADD(list, file):
                 num = linea[1]
                 binary = ToBinary(num, pos2, pos1, pos3)
                 if linea[0] == "A": # ADD A,(Dir)
-                    file.write(line + "\n")
-                    file.write("0101100" + binary + "\n")
+                    Write(binary, line, linecounter,"0101100", ErrorCounter)
+
                 if linea[0] == "B": # ADD B,(Dir)
-                    file.write(line + "\n")
-                    file.write("0101101" + binary + "\n")
+                    Write(binary, line, linecounter,"0101101", ErrorCounter)
+
+                    
             else:
-                file.write(line + "\n") # SUB A,(B)
-                file.write("010111000000000" + "\n")
+                ListOp.append("010111000000000")
+                ListLine.append(line)
 
         else: #XOR -> ins basicas
             if len(linea) > 1:
@@ -190,18 +210,18 @@ def ADD(list, file):
                     num = linea[1]
                     binary = ToBinary(num, pos2, pos1, pos3)
                     if linea[0] == "A":
-                        file.write(line + "\n")
-                        file.write("0000110" + binary + "\n")
+                        Write(binary, line, linecounter,"0000110", ErrorCounter)
+
                     elif linea[0] == "B":
-                        file.write(line + "\n")
-                        file.write("0000111" + binary +" \n")
+                        Write(binary, line, linecounter,"0000111", ErrorCounter)
+
                 else:
                     if linea[0] == "A":
-                        file.write(line + "\n")
-                        file.write("000010000000000\n")
+                        ListOp.append("000010000000000")
+                        ListLine.append(line)
                     elif linea[0] == "B":
-                        file.write(line + "\n")
-                        file.write("000010100000000\n")
+                        ListOp.append("000010100000000")
+                        ListLine.append(line)
             else:
                     pos1 = list[1].isnumeric()
     else: #Ej ADD (Dir)
@@ -214,8 +234,8 @@ def ADD(list, file):
         pos3 = CheckHexa(linea[0])
         linea[0] = linea[0].replace("#","")
         binary = ToBinary(num,pos2, pos1, pos3 )
-        file.write(line + "\n")
-        file.write("0101111" + binary + "\n")
+        Write(binary, line, linecounter,"0101111", ErrorCounter)
+
   
 def SUB(list, file):  
     linea = list1[1].split(",") # EJ A,B
@@ -232,14 +252,13 @@ def SUB(list, file):
                 num = linea[1]
                 binary = ToBinary(num, pos2, pos1, pos3)
                 if linea[0] == "A": # ADD A,(Dir)
-                    file.write(line + "\n")
-                    file.write("0110000" + binary + "\n")
+                    Write(binary, line, linecounter,"0110000", ErrorCounter)
                 if linea[0] == "B": # ADD B,(Dir)
-                    file.write(line + "\n")
-                    file.write("0110001" + binary + "\n")
+                    Write(binary, line, linecounter,"0110001", ErrorCounter)
+   
             else:
-                file.write(line + "\n") # SUB A,(B)
-                file.write("011001000000000" + "\n")
+                ListOp.append("011001000000000")
+                ListLine.append(line)
 
         else: #XOR -> ins basicas
             if len(linea) > 1:
@@ -252,18 +271,18 @@ def SUB(list, file):
                     num = linea[1]
                     binary = ToBinary(num, pos2, pos1, pos3)
                     if linea[0] == "A":
-                        file.write(line + "\n")
-                        file.write("0001010" + binary + "\n")
+                        Write(binary, line, linecounter,"0001010", ErrorCounter)
+
                     elif linea[0] == "B":
-                        file.write(line + "\n")
-                        file.write("0001011" + binary +" \n")
+                        Write(binary, line, linecounter,"0001011", ErrorCounter)
+
                 else:
                     if linea[0] == "A":
-                        file.write(line + "\n")
-                        file.write("000100000000000\n")
+                        ListOp.append("000100000000000")
+                        ListLine.append(line)
                     elif linea[0] == "B":
-                        file.write(line + "\n")
-                        file.write("000100100000000\n")
+                        ListOp.append("000100100000000")
+                        ListLine.append(line)
             else:
                     pos1 = list[1].isnumeric()
     else: #Ej ADD (Dir)
@@ -276,8 +295,8 @@ def SUB(list, file):
         pos3 = CheckHexa(linea[0])
         linea[0] = linea[0].replace("#","")
         binary = ToBinary(num,pos2, pos1, pos3 )
-        file.write(line + "\n")
-        file.write("0110011" + binary + "\n")
+        Write(binary, line, linecounter,"0110011", ErrorCounter)
+
   
 def AND(list, file):  
     linea = list1[1].split(",") # EJ A,B 
@@ -294,14 +313,15 @@ def AND(list, file):
                 num = linea[1]
                 binary = ToBinary(num, pos2, pos1, pos3)
                 if linea[0] == "A": # ADD A,(Dir)
-                    file.write(line + "\n")
-                    file.write("0110100" + binary + "\n")
+                    Write(binary, line, linecounter,"0110100", ErrorCounter)
+
                 if linea[0] == "B": # ADD B,(Dir)
-                    file.write(line + "\n")
-                    file.write("0110101" + binary + "\n")
+                    Write(binary, line, linecounter,"0110101", ErrorCounter)
+
+                    
             else:
-                file.write(line + "\n") # SUB A,(B)
-                file.write("011011000000000" + "\n")
+                ListOp.append("011011000000000")
+                ListLine.append(line)
 
         else: #XOR -> ins basicas
             if len(linea) > 1:
@@ -314,18 +334,21 @@ def AND(list, file):
                     num = linea[1]
                     binary = ToBinary(num, pos2, pos1, pos3)
                     if linea[0] == "A":
-                        file.write(line + "\n")
-                        file.write("0001110" + binary + "\n")
+                        Write(binary, line, linecounter,"0001110", ErrorCounter)
+
                     elif linea[0] == "B":
-                        file.write(line + "\n")
-                        file.write("0001111" + binary +" \n")
+                        Write(binary, line, linecounter,"0001111", ErrorCounter)
+
+                        
                 else:
                     if linea[0] == "A":
-                        file.write(line + "\n")
-                        file.write("000110000000000\n")
+                        ListOp.append("000110000000000")
+                        ListLine.append(line)
                     elif linea[0] == "B":
-                        file.write(line + "\n")
-                        file.write("000110100000000\n")
+                        ListOp.append("000110100000000")
+                        ListLine.append(line)
+                        
+                        
             else:
                     pos1 = list[1].isnumeric()
     else: #Ej ADD (Dir)
@@ -340,6 +363,8 @@ def AND(list, file):
         binary = ToBinary(num,pos2, pos1, pos3 )
         file.write(line + "\n")
         file.write("0110111" + binary + "\n")
+        Write(binary, line, linecounter,"0110111", ErrorCounter)
+
 
 def OR(list, file):  
     linea = list1[1].split(",") # EJ A,B 
@@ -356,14 +381,16 @@ def OR(list, file):
                 num = linea[1]
                 binary = ToBinary(num, pos2, pos1, pos3)
                 if linea[0] == "A": # ADD A,(Dir)
-                    file.write(line + "\n")
-                    file.write("0111000" + binary + "\n")
+                    Write(binary, line, linecounter,"0111000", ErrorCounter)
+
                 if linea[0] == "B": # ADD B,(Dir)
-                    file.write(line + "\n")
-                    file.write("0111001" + binary + "\n")
+                    Write(binary, line, linecounter,"0111001", ErrorCounter)
+
             else:
-                file.write(line + "\n") # SUB A,(B)
-                file.write("0111010000000" + "\n")
+                ListOp.append("0111010000000")
+                ListLine.append(line)
+
+                
 
         else: #XOR -> ins basicas
             if len(linea) > 1:
@@ -376,18 +403,19 @@ def OR(list, file):
                     num = linea[1]
                     binary = ToBinary(num, pos2, pos1, pos3)
                     if linea[0] == "A":
-                        file.write(line + "\n")
-                        file.write("0010010" + binary + "\n")
+                        Write(binary, line, linecounter,"0010010", ErrorCounter)
+
                     elif linea[0] == "B":
-                        file.write(line + "\n")
-                        file.write("0010011" + binary +" \n")
+                        Write(binary, line, linecounter,"0010011", ErrorCounter)
+
                 else:
                     if linea[0] == "A":
-                        file.write(line + "\n")
-                        file.write("001000000000000\n")
+                        ListOp.append("001000000000000")
+                        ListLine.append(line)
                     elif linea[0] == "B":
-                        file.write(line + "\n")
-                        file.write("001000100000000\n")
+                        ListOp.append("001000100000000")
+                        ListLine.append(line)
+                        
             else:
                     pos1 = list[1].isnumeric()
     else: #Ej ADD (Dir)
@@ -399,9 +427,9 @@ def OR(list, file):
         linea[0] = linea[0].replace("b","")
         pos3 = CheckHexa(linea[0])
         linea[0] = linea[0].replace("#","")
-        binary = ToBinary(num,pos2, pos1, pos3 )
-        file.write(line + "\n")
-        file.write("0111011" + binary + "\n")
+        binary = ToBinary(num,pos2, pos1, pos3)
+        Write(binary, line, linecounter,"0111011", ErrorCounter)
+
 
 def XOR(list, file):  
     linea = list1[1].split(",") # EJ A,B 
@@ -418,14 +446,13 @@ def XOR(list, file):
                 num = linea[1]
                 binary = ToBinary(num, pos2, pos1, pos3)
                 if linea[0] == "A": # ADD A,(Dir)
-                    file.write(line + "\n")
-                    file.write("0111111" + binary + "\n")
+                    Write(binary, line, linecounter,"0111111", ErrorCounter)
                 if linea[0] == "B": # ADD B,(Dir)
-                    file.write(line + "\n")
-                    file.write("1000000" + binary + "\n")
+                    Write(binary, line, linecounter,"1000000", ErrorCounter)
+
             else:
-                file.write(line + "\n") # SUB A,(B)
-                file.write("100000100000000" + "\n")
+                ListOp.append("100000100000000")
+                ListLine.append(line)
 
         else: #XOR -> ins basicas
             if len(linea) > 1:
@@ -438,18 +465,18 @@ def XOR(list, file):
                     num = linea[1]
                     binary = ToBinary(num, pos2, pos1, pos3)
                     if linea[0] == "A":
-                        file.write(line + "\n")
-                        file.write("0011010" + binary + "\n")
+                        Write(binary, line, linecounter,"0011010", ErrorCounter)
                     elif linea[0] == "B":
-                        file.write(line + "\n")
-                        file.write("0011011" + binary +" \n")
+                        Write(binary, line, linecounter,"0011011", ErrorCounter)
+                        
                 else:
                     if linea[0] == "A":
-                        file.write(line + "\n")
-                        file.write("001100000000000\n")
+                        ListOp.append("001100000000000")
+                        ListLine.append(line)
                     elif linea[0] == "B":
-                        file.write(line + "\n")
-                        file.write("001100100000000\n")
+                        ListOp.append("001100100000000")
+                        ListLine.append(line)
+                        
             else:
                     pos1 = list[1].isnumeric()
     else: #Ej ADD (Dir)
@@ -462,8 +489,9 @@ def XOR(list, file):
         pos3 = CheckHexa(linea[0])
         linea[0] = linea[0].replace("#","")
         binary = ToBinary(num,pos2, pos1, pos3 )
-        file.write(line + "\n")
-        file.write("1000010" + binary + "\n")
+        Write(binary, line, linecounter,"1000010", ErrorCounter)
+
+
 
 
 def NOT(list, file):   
@@ -481,29 +509,29 @@ def NOT(list, file):
                 num = linea[0]
                 binary = ToBinary(num, pos2, pos1, pos3)
                 if linea[1] == "A": #  (Dir),A
-                    file.write(line + "\n")
-                    file.write("0111100" + binary + "\n")
+                    Write(binary, line, linecounter,"0111100", ErrorCounter)
                 if linea[1] == "B": # ADD B,(Dir)
-                    file.write(line + "\n")
-                    file.write("0111101" + binary + "\n")
+                    Write(binary, line, linecounter,"0111101", ErrorCounter)
+                    
 
         else: #ADD -> ins basicas
             if linea[0] == "A" and linea[1] == "A":
-                file.write(line + "\n")
-                file.write("001010000000000\n")
+                ListOp.append("001010000000000")
+                ListLine.append(line)
             elif linea[0] == "A" and linea[1] == "B":
-                file.write(line + "\n")
-                file.write("001010100000000\n")
+                ListOp.append("001010100000000")
+                ListLine.append(line)
             elif linea[0] == "B" and linea[1] == "A":
-                file.write(line + "\n")
-                file.write("001011000000000\n")
+                ListOp.append("001011000000000")
+                ListLine.append(line)
             else:
-                file.write(line + "\n")
-                file.write("001011100000000\n")
+                ListOp.append("001011100000000")
+                ListLine.append(line)
+                
 
     else: #Ej NOT (Dir)
-        file.write(line + "\n")
-        file.write("0111110000000" + "\n")
+        ListOp.append("0111110000000")
+        ListLine.append(line)
 
 def SHL(list, file):   
     linea = list1[1].split(",") # EJ A,B 
@@ -520,29 +548,29 @@ def SHL(list, file):
                 num = linea[0]
                 binary = ToBinary(num, pos2, pos1, pos3)
                 if linea[1] == "A": #  (Dir),A
-                    file.write(line + "\n")
-                    file.write("1000011" + binary + "\n")
+                    Write(binary, line, linecounter,"1000011", ErrorCounter)
                 if linea[1] == "B": # ADD B,(Dir)
-                    file.write(line + "\n")
-                    file.write("1000100" + binary + "\n")
+                    Write(binary, line, linecounter,"1000100", ErrorCounter)
+
 
         else: #ADD -> ins basicas
             if linea[0] == "A" and linea[1] == "A":
-                file.write(line + "\n")
-                file.write("001110000000000\n")
+                ListOp.append("001110000000000")
+                ListLine.append(line) 
             elif linea[0] == "A" and linea[1] == "B":
-                file.write(line + "\n")
-                file.write("001110100000000\n")
+                ListOp.append("001110100000000")
+                ListLine.append(line) 
             elif linea[0] == "B" and linea[1] == "A":
-                file.write(line + "\n")
-                file.write("001111000000000\n")
+                ListOp.append("001111000000000")
+                ListLine.append(line)
             else:
-                file.write(line + "\n")
-                file.write("001111100000000\n")
+                ListOp.append("001111100000000")
+                ListLine.append(line)
+                
 
     else: #Ej NOT (Dir)
-        file.write(line + "\n")
-        file.write("100010100000000" + "\n")
+        ListOp.append("100010100000000")
+        ListLine.append(line)
 
 def SHR(list, file):   
     linea = list1[1].split(",") # EJ A,B 
@@ -559,29 +587,29 @@ def SHR(list, file):
                 num = linea[0]
                 binary = ToBinary(num, pos2, pos1, pos3)
                 if linea[1] == "A": #  (Dir),A
-                    file.write(line + "\n")
-                    file.write("1000110" + binary + "\n")
+                    Write(binary, line, linecounter,"1000110", ErrorCounter)
+
                 if linea[1] == "B": # ADD B,(Dir)
-                    file.write(line + "\n")
-                    file.write("1000111" + binary + "\n")
+                    Write(binary, line, linecounter,"1000111", ErrorCounter)
+
 
         else: #ADD -> ins basicas
             if linea[0] == "A" and linea[1] == "A":
-                file.write(line + "\n")
-                file.write("010000000000000\n")
+                ListOp.append("010000000000000")
+                ListLine.append(line)
             elif linea[0] == "A" and linea[1] == "B":
-                file.write(line + "\n")
-                file.write("010000100000000\n")
+                ListOp.append("010000100000000")
+                ListLine.append(line)
             elif linea[0] == "B" and linea[1] == "A":
-                file.write(line + "\n")
-                file.write("010001000000000\n")
+                ListOp.append("010001000000000")
+                ListLine.append(line)    
             else:
-                file.write(line + "\n")
-                file.write("010001100000000\n")
+                ListOp.append("010001100000000")
+                ListLine.append(line)   
 
     else: #Ej NOT (Dir)
-        file.write(line + "\n")
-        file.write("100100000000000" + "\n")
+        ListOp.append("100100000000000")
+        ListLine.append(line) 
 
 
 def INC(list, file):   
@@ -597,15 +625,15 @@ def INC(list, file):
             if pos1 == True or pos2 == True or pos3 == True: #Ej INC (Dir)
                 num = linea[0]
                 binary = ToBinary(num, pos2, pos1, pos3)
-                file.write(line + "\n")
-                file.write("1001001" + binary + "\n")
+                Write(binary, line, linecounter,"1001001", ErrorCounter)
+
             else:
-                file.write(line + "\n")
-                file.write("100101000000000" + "\n")
+                ListOp.append("100101000000000")
+                ListLine.append(line)
     #INC -> ins basicas
     else:
-        file.write(line + "\n")
-        file.write("010010000000000\n")
+        ListOp.append("010010000000000")
+        ListLine.append(line)
             
 def RST(list, file):   
     linea = list1[1].split(",") # EJ A,B 
@@ -620,11 +648,11 @@ def RST(list, file):
             if pos1 == True or pos2 == True or pos3 == True: #Ej INC (Dir)
                 num = linea[0]
                 binary = ToBinary(num, pos2, pos1, pos3)
-                file.write(line + "\n")
-                file.write("1001011" + binary + "\n")
+                Write(binary, line, linecounter,"1001011", ErrorCounter)
             else:
-                file.write(line + "\n")
-                file.write("100110000000000" + "\n")
+                ListOp.append("100110000000000")
+                ListLine.append(line)
+                
 
 def CMP(list, file):
     linea = list1[1].split(",") # EJ A,B
@@ -640,14 +668,14 @@ def CMP(list, file):
             num = linea[1]
             binary = ToBinary(num, pos2, pos1, pos3)
             if linea[0] == "A":
-                file.write(line + "\n")
-                file.write("1010000" + binary + "\n")
+                Write(binary, line, linecounter,"1010000", ErrorCounter)
             else:
-                file.write(line + "\n")
-                file.write("1010001" + binary + "\n")
+                Write(binary, line, linecounter,"1010001", ErrorCounter)
+                
         else: #CMP A,(B)
-            file.write(line + "\n")
-            file.write("101001000000000" + "\n")
+            ListOp.append("101001000000000")
+            ListLine.append(line)
+
     else:
         pos1 = linea[1].isnumeric()
         pos2 = CheckBinary(linea[1])
@@ -658,14 +686,13 @@ def CMP(list, file):
             num = linea[1]
             binary = ToBinary(num, pos2, pos1, pos3)
             if linea[0] == "A":
-                file.write(line + "\n")
-                file.write("1001110" + binary + "\n")
+                Write(binary, line, linecounter,"1001110", ErrorCounter)
+
             else:
-                file.write(line + "\n")
-                file.write("1001111" + binary + "\n")
+                Write(binary, line, linecounter,"1001111", ErrorCounter)
         else: #CMP A,B
-            file.write(line + "\n")
-            file.write("100110100000000" + "\n")
+            ListOp.append("100110100000000")
+            ListLine.append(line)
 
 
 def JMP(list, file):
@@ -678,8 +705,7 @@ def JMP(list, file):
     if pos1 == True or pos2 == True or pos3 == True: #Ej INC (Dir)
         num = linea
         binary = ToBinary(num, pos2, pos1, pos3)
-        file.write(line + "\n")
-        file.write(("1010011" + binary + "\n"))
+        Write(binary, line, linecounter,"1010011", ErrorCounter)
 
 def JEQ(list, file):
     linea = list1[1] # EJ Dir
@@ -691,8 +717,8 @@ def JEQ(list, file):
     if pos1 == True or pos2 == True or pos3 == True: #Ej INC (Dir)
         num = linea
         binary = ToBinary(num, pos2, pos1, pos3)
-        file.write(line + "\n")
-        file.write(("1010100" + binary + "\n"))
+        Write(binary, line, linecounter,"1010100", ErrorCounter)
+
 
 
 def JNE(list, file):
@@ -705,8 +731,7 @@ def JNE(list, file):
     if pos1 == True or pos2 == True or pos3 == True: #Ej INC (Dir)
         num = linea
         binary = ToBinary(num, pos2, pos1, pos3)
-        file.write(line + "\n")
-        file.write(("1010101" + binary + "\n"))
+        Write(binary, line, linecounter,"1010101", ErrorCounter)
 
 def JGT(list, file):
     linea = list1[1] # EJ Dir
@@ -718,8 +743,8 @@ def JGT(list, file):
     if pos1 == True or pos2 == True or pos3 == True: #Ej INC (Dir)
         num = linea
         binary = ToBinary(num, pos2, pos1, pos3)
-        file.write(line + "\n")
-        file.write(("1010110" + binary + "\n"))
+        Write(binary, line, linecounter,"1010110", ErrorCounter)
+
 
 def JLT(list, file):
     linea = list1[1] # EJ Dir
@@ -731,8 +756,8 @@ def JLT(list, file):
     if pos1 == True or pos2 == True or pos3 == True: #Ej INC (Dir)
         num = linea
         binary = ToBinary(num, pos2, pos1, pos3)
-        file.write(line + "\n")
-        file.write(("1010111" + binary + "\n"))
+        Write(binary, line, linecounter,"1010111", ErrorCounter)
+
 
 def JGE(list, file):
     linea = list1[1] # EJ Dir
@@ -744,8 +769,7 @@ def JGE(list, file):
     if pos1 == True or pos2 == True or pos3 == True: #Ej INC (Dir)
         num = linea
         binary = ToBinary(num, pos2, pos1, pos3)
-        file.write(line + "\n")
-        file.write(("1011000" + binary + "\n"))
+        Write(binary, line, linecounter,"1011000", ErrorCounter)
 
 def JLE(list, file):
     linea = list1[1] # EJ Dir
@@ -757,8 +781,8 @@ def JLE(list, file):
     if pos1 == True or pos2 == True or pos3 == True: #Ej INC (Dir)
         num = linea
         binary = ToBinary(num, pos2, pos1, pos3)
-        file.write(line + "\n")
-        file.write(("1011001" + binary + "\n"))
+        Write(binary, line, linecounter,"1011001", ErrorCounter)
+
 
 def JCR(list, file):
     linea = list1[1] # EJ Dir
@@ -770,8 +794,8 @@ def JCR(list, file):
     if pos1 == True or pos2 == True or pos3 == True: #Ej INC (Dir)
         num = linea
         binary = ToBinary(num, pos2, pos1, pos3)
-        file.write(line + "\n")
-        file.write(("1011010" + binary + "\n"))
+        Write(binary, line, linecounter,"1011010", ErrorCounter)
+
 
 def JOV(list, file):
     linea = list1[1] # EJ Dir
@@ -782,10 +806,10 @@ def JOV(list, file):
     if pos1 == True or pos2 == True or pos3 == True: #Ej INC (Dir)
         num = linea
         binary = ToBinary(num, pos2, pos1, pos3)
-        file.write(line + "\n")
-        file.write(("1011011" + binary + "\n"))
+        Write(binary, line, linecounter,"1011011", ErrorCounter)
 
-entry = open("p3_2-correccion1.ass", "r")
+entry = open("test.ass", "r")
+#entry = open("p3_2-correccion1.ass", "r")
 salida = open("salida.out", "w")
 entrada = entry.readlines()
 
@@ -799,6 +823,10 @@ for r in entrada:
 
 Revisar = revisar(ListaMaxima, Exp)
 
+linecounter = 0
+ErrorCounter = []
+ListOp = []
+ListLine = []
 while i <lenfile:
     RealLine = []
     line = entrada[i].strip() #linea de entrada
@@ -862,9 +890,17 @@ while i <lenfile:
     else:
         pass   
 
-
+    linecounter+=1
     i+=1
 
+
+if ErrorCounter.count("1") == 0:
+    for i in range(len(ListLine)):
+        salida.write(ListLine[i] + "\n")
+        salida.write(ListOp[i]+ "\n")
+
+
+print("Errorcounter", ErrorCounter)
 
 entry.close()
 salida.close()
